@@ -20,7 +20,7 @@ import kfp.compiler as compiler
 # export PYTHONPATH=/mnt/c/_git/magencio-kubeflow-pipelines/sdk/python:$PYTHONPATH
 import kfp.dsl.databricks as databricks
 
-_CLUSTER_SPEC= """
+_CLUSTER_SPEC = """
 {
     "spark_version":"5.3.x-scala2.11",
     "node_type_id": "Standard_D3_v2",
@@ -31,27 +31,26 @@ _CLUSTER_SPEC= """
 }
 """
 
-def create_cluster(clusterName):
+def create_cluster(cluster_name, cluster_spec):
     return databricks.CreateClusterOp(
         name = "createcluster",
-        cluster_name = clusterName,
-        spec = json.loads(_CLUSTER_SPEC)
+        cluster_name = cluster_name,
+        spec = json.loads(cluster_spec)
     )
 
-def delete_cluster(clusterName):
+def delete_cluster(cluster_name):
     return databricks.CreateClusterOp(
         name = "deletecluster",
-        cluster_name = clusterName
+        cluster_name = cluster_name
     )
 
 @dsl.pipeline(
     name="DatabricksCluster",
     description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
 )
-def calc_pipeline():
-    clusterName = "test-cluster"
-    create_cluster(clusterName)
-    delete_cluster(clusterName)
+def calc_pipeline(cluster_name="test-cluster"):
+    create_cluster_result = create_cluster(cluster_name, _CLUSTER_SPEC)
+    delete_cluster(create_cluster_result.outputs["cluster_name"])
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")
