@@ -20,55 +20,38 @@ import kfp.compiler as compiler
 # export PYTHONPATH=/mnt/c/_git/magencio-kubeflow-pipelines/sdk/python:$PYTHONPATH
 import kfp.dsl.databricks as databricks
 
-_JOB_SPEC = """
+_CLUSTER_SPEC= """
 {
-  "new_cluster": {
     "spark_version":"5.3.x-scala2.11",
     "node_type_id": "Standard_D3_v2",
-    "num_workers": 2
-  },
-  "libraries": [
-    {
-      "jar": "dbfs:/my-jar.jar"
+    "spark_conf": {
+        "spark.speculation": "true"
     },
-    {
-      "maven": {
-        "coordinates": "org.jsoup:jsoup:1.7.2"
-      }
-    }
-  ],
-  "timeout_seconds": 3600,
-  "max_retries": 1,
-  "schedule": {
-    "quartz_cron_expression": "0 15 22 ? * *",
-    "timezone_id": "America/Los_Angeles"
-  },
-  "spark_jar_task": {
-    "main_class_name": "com.databricks.ComputeModels"
-  }
+    "num_workers": 2
 }
 """
 
-def create_job():
-    return databricks.CreateJobOp(
-      name = "createjob",
-      job_name_prefix = "test-job-",
-      spec = json.loads(_JOB_SPEC)
+def create_cluster(clusterName):
+    return databricks.CreateClusterOp(
+        name = "createcluster",
+        cluster_name = clusterName,
+        spec = json.loads(_CLUSTER_SPEC)
     )
 
-def delete_job(inputVal):
-    return databricks.DeleteJobOp(
-      name = "deletejob",
-      job_name = inputVal
+def delete_cluster(clusterName):
+    return databricks.CreateClusterOp(
+        name = "deletecluster",
+        cluster_name = clusterName
     )
 
 @dsl.pipeline(
-    name="DatabricksJob",
+    name="DatabricksCluster",
     description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
 )
 def calc_pipeline():
-  create_job_result = create_job()
-  delete_job(create_job_result.outputs["job_name"])
+    clusterName = "test-cluster"
+    create_cluster(clusterName)
+    delete_cluster(clusterName)
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")
