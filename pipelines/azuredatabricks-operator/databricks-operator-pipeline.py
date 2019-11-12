@@ -19,7 +19,7 @@ def create_cluster():
             "spark_version":"5.3.x-scala2.11",
             "node_type_id": "Standard_D3_v2",
             "spark_conf": {
-              "spark.speculation": True
+              "spark.speculation": "true"
             },
             "num_workers": 2
           }
