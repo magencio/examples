@@ -21,7 +21,11 @@ import kfp.compiler as compiler
 # export PYTHONPATH=/mnt/c/_git/magencio-kubeflow-pipelines/sdk/python:$PYTHONPATH
 import kfp.dsl.databricks as databricks
 
-def submit_run(run_name):
+def submit_run(run_name, parameter):
+    # Sample based on [Create a spark-submit job](https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job)
+    # Additional info:
+    #   - [Databricks File System](https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system)
+    #   - [DBFS CLI](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli)
     return databricks.SubmitRunOp(
         name = "submitrun",
         run_name = run_name,
@@ -30,18 +34,10 @@ def submit_run(run_name):
             "node_type_id": "Standard_D3_v2",
             "num_workers": 2
         },
-        libraries = [
-            {
-                "jar": "dbfs:/my-jar.jar"
-            },
-            {
-                "maven": {
-                    "coordinates": "org.jsoup:jsoup:1.7.2"
-                }
-            }
-        ],
+        libraries = [{"jar": "dbfs:/docs/sparkpi.jar"}],
         spark_jar_task = {
-            "main_class_name": "com.databricks.ComputeModels"
+            "main_class_name": "org.apache.spark.examples.SparkPi",
+            "parameters": [str(parameter)]
         }
     )
 
@@ -54,8 +50,8 @@ echo_op = kfp.components.func_to_container_op(echo)
     name="DatabricksRun",
     description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
 )
-def calc_pipeline(run_name="test-run"):
-    submit_run_task = submit_run(run_name)
+def calc_pipeline(run_name="test-run", parameter=10):
+    submit_run_task = submit_run(run_name, parameter)
     echo_task = echo_op(submit_run_task.outputs["result"])
 
 if __name__ == "__main__":
