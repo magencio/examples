@@ -37,7 +37,7 @@ def submit_run(run_name, parameter):
         libraries = [{"jar": "dbfs:/docs/sparkpi.jar"}],
         spark_jar_task = {
             "main_class_name": "org.apache.spark.examples.SparkPi",
-            "parameters": [str(parameter)]
+            "parameters": [parameter]
         }
     )
 
@@ -50,7 +50,7 @@ echo_op = kfp.components.func_to_container_op(echo)
     name="DatabricksRun",
     description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
 )
-def calc_pipeline(run_name="test-run", parameter=10):
+def calc_pipeline(run_name="test-run", parameter="10"):
     submit_run_task = submit_run(run_name, parameter)
     echo_task = echo_op(submit_run_task.outputs["result"])
 
