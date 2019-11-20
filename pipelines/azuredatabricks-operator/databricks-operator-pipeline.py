@@ -19,89 +19,132 @@ import kfp.components as components
 
 import time
 
+def submit_run():
+  return dsl.ResourceOp(
+    k8s_resource={
+      "apiVersion": "databricks.microsoft.com/v1alpha1",
+      "kind": "Run",
+      "metadata": {
+        "name":"test-run",
+      },
+      "spec":{
+        "new_cluster": {
+          "spark_version":"5.3.x-scala2.11",
+          "node_type_id": "Standard_D3_v2",
+          "num_workers": 2
+        },
+        "libraries": [
+          {
+            "jar": "dbfs:/my-jar.jar"
+          },
+          {
+            "maven": {
+              "coordinates": "org.jsoup:jsoup:1.7.2"
+            }
+          }
+        ],
+        "spark_jar_task": {
+          "main_class_name": "com.databricks.ComputeModels"
+        }
+      },
+    },
+    action = "create", 
+    success_condition = "status.metadata.state.life_cycle_state != PENDING, status.metadata.state.life_cycle_state != RUNNING, status.metadata.state.life_cycle_state != TERMINATING",
+    attribute_outputs = {
+        "name": "{.status.metadata.run_id}",
+        "run_id": "{.status.metadata.run_id}",
+        "run_name": "{.status.metadata.run_name}",
+        "error": "{.status.error}",
+        "result": "{.status.notebook_output.result}",
+        "result_truncated": "{.status.notebook_output.truncated}",
+        "life_cycle_state": "{.status.metadata.state.life_cycle_state}",
+        "result_state": "{.status.metadata.state.result_state}"
+    },
+    name="createjob"
+  )
 
 def create_cluster():
-    return dsl.ResourceOp(
-        k8s_resource={
-          "apiVersion": "databricks.microsoft.com/v1alpha1",
-          "kind": "Dcluster",
-          "metadata": {
-            "name":"test-cluster",
-          },
-          "spec":{
-            "spark_version":"5.3.x-scala2.11",
-            "node_type_id": "Standard_D3_v2",
-            "spark_conf": {
-              "spark.speculation": "true"
-            },
-            "num_workers": 2
-          }
+  return dsl.ResourceOp(
+      k8s_resource={
+        "apiVersion": "databricks.microsoft.com/v1alpha1",
+        "kind": "Dcluster",
+        "metadata": {
+          "name":"test-cluster",
         },
-        name="foo"
-    )
+        "spec":{
+          "spark_version":"5.3.x-scala2.11",
+          "node_type_id": "Standard_D3_v2",
+          "spark_conf": {
+            "spark.speculation": "true"
+          },
+          "num_workers": 2
+        }
+      },
+      name="foo"
+  )
 
 def create_job():
   # TODO - also consider json.loads approach as per: https://github.com/kubeflow/pipelines/blob/master/samples/core/resource_ops/resource_ops.py
 
-    return dsl.ResourceOp(
-        k8s_resource={
-          "apiVersion": "databricks.microsoft.com/v1alpha1",
-          "kind": "Djob",
-          "metadata": {
-            "name":"test-job-" + str(time.time()),
+  return dsl.ResourceOp(
+      k8s_resource={
+        "apiVersion": "databricks.microsoft.com/v1alpha1",
+        "kind": "Djob",
+        "metadata": {
+          "name":"test-job-" + str(time.time()),
+        },
+        "spec":{
+          "new_cluster" : {
+            "spark_version":"5.3.x-scala2.11",
+            "node_type_id": "Standard_D3_v2",
+            "num_workers": 2
           },
-          "spec":{
-            "new_cluster" : {
-              "spark_version":"5.3.x-scala2.11",
-              "node_type_id": "Standard_D3_v2",
-              "num_workers": 2
+          "libraries" : [
+            {
+              "jar": 'dbfs:/my-jar.jar'
             },
-            "libraries" : [
-              {
-                "jar": 'dbfs:/my-jar.jar'
-              },
-              {
-                "maven": {
-                  "coordinates": 'org.jsoup:jsoup:1.7.2'
-                }
+            {
+              "maven": {
+                "coordinates": 'org.jsoup:jsoup:1.7.2'
               }
-            ],
-            "timeout_seconds" : 3600,
-            "max_retries": 1,
-            "schedule":{
-              "quartz_cron_expression": "0 15 22 ? * *",
-              "timezone_id": "America/Los_Angeles",
-            },
-            "spark_jar_task": {
-              "main_class_name": "com.databricks.ComputeModels",
-            },
+            }
+          ],
+          "timeout_seconds" : 3600,
+          "max_retries": 1,
+          "schedule":{
+            "quartz_cron_expression": "0 15 22 ? * *",
+            "timezone_id": "America/Los_Angeles",
           },
-      },
-      success_condition="status.job_status.job_id > 0",
-      attribute_outputs= {
-        "name": "{.status.job_status.job_id}",
-        "job_id": "{.status.job_status.job_id}",
-        "job_name": "{.metadata.name}"
-      },
-      action="create",
-      name="createjob"
-    )
+          "spark_jar_task": {
+            "main_class_name": "com.databricks.ComputeModels",
+          },
+        },
+    },
+    success_condition="status.job_status.job_id > 0",
+    attribute_outputs= {
+      "name": "{.status.job_status.job_id}",
+      "job_id": "{.status.job_status.job_id}",
+      "job_name": "{.metadata.name}"
+    },
+    action="create",
+    name="createjob"
+  )
 
 def delete_job(inputVal):
-    # name = "deletejob-" + inputVal
-    name = "deletejob"
-    return dsl.ResourceOp(
-        k8s_resource={
-          "apiVersion": "databricks.microsoft.com/v1alpha1",
-          "kind": "Djob",
-          "metadata": {
-            # "name":"test-job"
-            "name":inputVal,
-          },
-      },
-      action="delete",
-      name=name,
-    )
+  # name = "deletejob-" + inputVal
+  name = "deletejob"
+  return dsl.ResourceOp(
+      k8s_resource={
+        "apiVersion": "databricks.microsoft.com/v1alpha1",
+        "kind": "Djob",
+        "metadata": {
+          # "name":"test-job"
+          "name":inputVal,
+        },
+    },
+    action="delete",
+    name=name,
+  )
 
 @dsl.pipeline(
     name="Databricks",
