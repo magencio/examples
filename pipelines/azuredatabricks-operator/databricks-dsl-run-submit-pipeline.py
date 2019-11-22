@@ -52,7 +52,7 @@ echo_op = kfp.components.func_to_container_op(echo)
 )
 def calc_pipeline(run_name="test-run", parameter="10"):
     submit_run_task = submit_run(run_name, parameter)
-    echo_task = echo_op(submit_run_task.outputs["result"])
+    echo_task = echo_op(submit_run_task.outputs["result_state"])
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")
