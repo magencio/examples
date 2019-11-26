@@ -49,10 +49,10 @@ _JOB_SPEC = """
 }
 """
 
-def create_job(job_name_prefix, job_spec):
+def create_job(job_name, job_spec):
     return databricks.CreateJobOp(
       name = "createjob",
-      job_name_prefix = job_name_prefix,
+      job_name = job_name,
       spec = json.loads(job_spec)
     )
 
@@ -66,8 +66,8 @@ def delete_job(job_name):
     name="DatabricksJob",
     description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
 )
-def calc_pipeline(job_name_prefix="test-job-"):
-  create_job_result = create_job(job_name_prefix, _JOB_SPEC)
+def calc_pipeline(job_name="test-job"):
+  create_job_result = create_job(job_name, _JOB_SPEC)
   delete_job(create_job_result.outputs["job_name"])
 
 if __name__ == "__main__":
