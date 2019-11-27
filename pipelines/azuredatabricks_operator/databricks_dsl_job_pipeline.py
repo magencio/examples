@@ -54,8 +54,8 @@ def delete_job(job_name):
     description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
 )
 def calc_pipeline(job_name="test-job"):
-    create_job_result = create_job(job_name, _JOB_SPEC)
-    delete_job(create_job_result.outputs["job_name"])
+    create_job_task = create_job(job_name, _JOB_SPEC)
+    delete_job(create_job_task.outputs["job_name"])
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")
