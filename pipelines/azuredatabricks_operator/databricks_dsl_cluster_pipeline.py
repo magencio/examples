@@ -1,8 +1,9 @@
 import json
 import kfp.dsl as dsl
 import kfp.compiler as compiler
-# Git clone custom Kubernetes Pipelines SDK https://github.com/magencio/pipelines.git, databricks-wrapper branch to 
-# e.g. /mnt/c/_git/magencio-kubeflow-pipelines. Then add the SDK to PYTHONPATH: 
+# Git clone custom Kubernetes Pipelines SDK https://github.com/magencio/pipelines.git,
+# databricks-wrapper branch to e.g. /mnt/c/_git/magencio-kubeflow-pipelines.
+# Then add the SDK to PYTHONPATH:
 # export PYTHONPATH=/mnt/c/_git/magencio-kubeflow-pipelines/sdk/python:$PYTHONPATH
 import kfp.dsl.databricks as databricks
 
@@ -43,24 +44,24 @@ _JOB_SPEC = """
 
 def create_cluster(cluster_name, cluster_spec):
     return databricks.CreateClusterOp(
-        name = "createcluster",
-        cluster_name = cluster_name,
-        spec = json.loads(cluster_spec)
+        name="createcluster",
+        cluster_name=cluster_name,
+        spec=json.loads(cluster_spec)
     )
 
 def create_job(cluster_id, job_name, job_spec):
     spec = json.loads(job_spec)
     spec["existing_cluster_id"] = cluster_id
     return databricks.CreateJobOp(
-        name = "createjob",
-        job_name = job_name,
-        spec = spec
+        name="createjob",
+        job_name=job_name,
+        spec=spec
     )
 
 def delete_cluster(cluster_name):
     return databricks.DeleteClusterOp(
-        name = "deletecluster",
-        cluster_name = cluster_name
+        name="deletecluster",
+        cluster_name=cluster_name
     )
 
 @dsl.pipeline(
