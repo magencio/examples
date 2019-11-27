@@ -41,7 +41,7 @@ def create_job(cluster_id, job_name):
             },
             "spark_jar_task": {
                 "main_class_name": "org.apache.spark.examples.SparkPi",
-                "parameters": "10"
+                "parameters": ["10"]
             }
         }
     )
