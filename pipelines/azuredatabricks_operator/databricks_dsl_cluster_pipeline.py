@@ -18,49 +18,45 @@ def create_cluster(cluster_name):
         num_workers=2
     )
 
-def create_job(cluster_id, job_name):
+def submit_run(cluster_id, run_name, parameter):
     # Sample based on [Create a spark-submit job](https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job)
     # Additional info:
     #   - [Databricks File System](https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system)
     #   - [DBFS CLI](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli)
-    return databricks.CreateJobOp(
-        name="createjob",
-        job_name=job_name,
-        spec={
-            "existing_cluster_id": cluster_id,
-            "libraries": [
-                {
-                    "jar": "dbfs:/docs/sparkpi.jar"
-                }
-            ],
-            "timeout_seconds": 3600,
-            "max_retries": 1,
-            "schedule": {
-                "quartz_cron_expression": "0 15 22 ? * *",
-                "timezone_id": "America/Los_Angeles"
-            },
-            "spark_jar_task": {
-                "main_class_name": "org.apache.spark.examples.SparkPi",
-                "parameters": ["10"]
-            }
+    return databricks.SubmitRunOp(
+        name="submitrun",
+        run_name=run_name,
+        existing_cluster_id=cluster_id,
+        libraries=[{"jar": "dbfs:/docs/sparkpi.jar"}],
+        spark_jar_task={
+            "main_class_name": "org.apache.spark.examples.SparkPi",
+            "parameters": [parameter]
         }
     )
 
-def delete_cluster(cluster_id):
+def delete_run(run_name):
+    return databricks.DeleteRunOp(
+        name="deleterun",
+        run_name=run_name
+    )
+
+def delete_cluster(cluster_name):
     return databricks.DeleteClusterOp(
         name="deletecluster",
-        cluster_id=cluster_id
+        cluster_name=cluster_name
     )
 
 @dsl.pipeline(
     name="DatabricksCluster",
-    description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
+    description="A toy pipeline that computes an approximation to pi with Azure Databricks."
 )
-def calc_pipeline(cluster_name="test-cluster", job_name="test-job"):
+def calc_pipeline(cluster_name="test-cluster", run_name="test-run", parameter="10"):
     create_cluster_task = create_cluster(cluster_name)
-    create_job_task = create_job(create_cluster_task.outputs["cluster_id"], job_name)
-    delete_cluster_task = delete_cluster(create_cluster_task.outputs["cluster_id"])
-    delete_cluster_task.after(create_job_task)
+    submit_run_task = submit_run(create_cluster_task.outputs["cluster_id"], run_name, parameter)
+    delete_run_task = delete_run(run_name)
+    delete_run_task.after(submit_run_task)
+    delete_cluster_task = delete_cluster(cluster_name)
+    delete_cluster_task.after(delete_run_task)
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")

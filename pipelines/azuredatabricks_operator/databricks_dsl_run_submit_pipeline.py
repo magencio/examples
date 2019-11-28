@@ -16,7 +16,7 @@ def calc_pipeline(run_name="test-run", parameter="10"):
     # Additional info:
     #   - [Databricks File System](https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system)
     #   - [DBFS CLI](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli)
-    databricks.SubmitRunOp(
+    submit_run_task = databricks.SubmitRunOp(
         name="submitrun",
         run_name=run_name,
         new_cluster={
@@ -30,6 +30,12 @@ def calc_pipeline(run_name="test-run", parameter="10"):
             "parameters": [parameter]
         }
     )
+
+    delete_run_task = databricks.DeleteRunOp(
+        name="deleterun",
+        run_name=run_name
+    )
+    delete_run_task.after(submit_run_task)
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")
