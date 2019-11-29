@@ -1,17 +1,17 @@
 import kfp.dsl as dsl
 import kfp.compiler as compiler
 
-def submit_run():
+def submit_run(run_name):
     return dsl.ResourceOp(
         name="submitrun",
         k8s_resource={
             "apiVersion": "databricks.microsoft.com/v1alpha1",
             "kind": "Run",
             "metadata": {
-                "name":"test-run",
+                "name":run_name,
             },
             "spec":{
-                "run_name":"test-run",
+                "run_name":run_name,
                 "new_cluster": {
                     "spark_version":"5.3.x-scala2.11",
                     "node_type_id": "Standard_D3_v2",
@@ -46,17 +46,30 @@ def submit_run():
         }
     )
 
-def create_cluster():
+def delete_run(run_name):
+    return dsl.ResourceOp(
+        name="deleterun",
+        k8s_resource={
+            "apiVersion": "databricks.microsoft.com/v1alpha1",
+            "kind": "Run",
+            "metadata": {
+                "name": run_name
+            }
+        },
+        action="delete",
+    )
+
+def create_cluster(cluster_name):
     return dsl.ResourceOp(
         name="createcluster",
         k8s_resource={
             "apiVersion": "databricks.microsoft.com/v1alpha1",
             "kind": "Dcluster",
             "metadata": {
-                "name":"test-cluster",
+                "name":cluster_name,
             },
             "spec":{
-                "cluster_name": "test-cluster",
+                "cluster_name": cluster_name,
                 "spark_version":"5.3.x-scala2.11",
                 "node_type_id": "Standard_D3_v2",
                 "spark_conf": {
@@ -65,20 +78,40 @@ def create_cluster():
                 "num_workers": 2
             }
         },
-        action="create"
+        action="create",
+        success_condition="status.cluster_info.state in (RUNNING, TERMINATED, UNKNOWN)",
+        attribute_outputs={
+            "name": "{.metadata.name}",
+            "cluster_id": "{.status.cluster_info.cluster_id}",
+            "cluster_name": "{.status.cluster_info.cluster_name}",
+            "state": "{.status.cluster_info.state}"
+        }
     )
 
-def create_job():
+def delete_cluster(cluster_name):
+    return dsl.ResourceOp(
+        name="deletecluster",
+        k8s_resource={
+            "apiVersion": "databricks.microsoft.com/v1alpha1",
+            "kind": "Dcluster",
+            "metadata": {
+                "name": cluster_name
+            }
+        },
+        action="delete",
+    )
+
+def create_job(job_name):
     return dsl.ResourceOp(
         name="createjob",
         k8s_resource={
             "apiVersion": "databricks.microsoft.com/v1alpha1",
             "kind": "Djob",
             "metadata": {
-                "name": "test-job",
+                "name": job_name,
             },
             "spec":{
-                "name": "test-job",
+                "name": job_name,
                 "new_cluster" : {
                     "spark_version":"5.3.x-scala2.11",
                     "node_type_id": "Standard_D3_v2",
@@ -129,11 +162,12 @@ def delete_job(job_name):
 
 @dsl.pipeline(
     name="Databricks",
-    description="A toy pipeline that performs arithmetic calculations with a bit of Azure with Databricks.",
+    description="A toy pipeline that manages Databricks resources.",
 )
-def calc_pipeline():
-    create_job_task = create_job()
-    delete_job(create_job_task.outputs["job_name"])
+def calc_pipeline(job_name="test-job"):
+    create_job_task = create_job(job_name)
+    delete_job_task = delete_job(job_name)
+    delete_job_task.after(create_job_task)
 
 if __name__ == "__main__":
     compiler.Compiler().compile(calc_pipeline, __file__ + ".tar.gz")

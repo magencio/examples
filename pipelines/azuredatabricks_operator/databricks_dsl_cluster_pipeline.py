@@ -19,10 +19,10 @@ def create_cluster(cluster_name):
     )
 
 def submit_run(cluster_id, run_name, parameter):
-    # Sample based on [Create a spark-submit job](https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job)
+    # Sample based on https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job
     # Additional info:
-    #   - [Databricks File System](https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system)
-    #   - [DBFS CLI](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli)
+    #   - Databricks File System: https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system
+    #   - DBFS CLI: https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli
     return databricks.SubmitRunOp(
         name="submitrun",
         run_name=run_name,

@@ -12,10 +12,10 @@ import kfp.dsl.databricks as databricks
 )
 def calc_pipeline(run_name="test-run", parameter="10"):
 
-    # Sample based on [Create a spark-submit job](https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job)
+    # Sample based on https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job
     # Additional info:
-    #   - [Databricks File System](https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system)
-    #   - [DBFS CLI](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli)
+    #   - Databricks File System: https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system
+    #   - DBFS CLI: https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli
     submit_run_task = databricks.SubmitRunOp(
         name="submitrun",
         run_name=run_name,
