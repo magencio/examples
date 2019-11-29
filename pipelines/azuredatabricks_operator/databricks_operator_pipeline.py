@@ -35,7 +35,9 @@ def submit_run(run_name):
         action="create",
         success_condition="status.metadata.state.life_cycle_state in (TERMINATED, SKIPPED, INTERNAL_ERROR)",
         attribute_outputs={
-            "name": "job-{.status.metadata.job_id}-run-{.status.metadata.number_in_job}",
+            "name": "{.metadata.name}",
+            "job_id": "{.status.metadata.job_id}",
+            "number_in_job": "{.status.metadata.number_in_job}",
             "run_id": "{.status.metadata.run_id}",
             "run_name": "{.status.metadata.run_name}",
             "life_cycle_state": "{.status.metadata.state.life_cycle_state}",
@@ -141,9 +143,9 @@ def create_job(job_name):
         action="create",
         success_condition="status.job_status.job_id > 0",
         attribute_outputs={
-            "name": "{.status.job_status.job_id}",
+            "name": "{.metadata.name}",
             "job_id": "{.status.job_status.job_id}",
-            "job_name": "{.metadata.name}"
+            "job_name": "{.status.job_status.settings.name}"
         }
     )
 
