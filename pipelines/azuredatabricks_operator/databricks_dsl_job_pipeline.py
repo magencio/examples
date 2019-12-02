@@ -17,7 +17,7 @@ def create_job(job_name):
         }
     )
 
-def create_run(run_name, job_name, parameter):
+def submit_run(run_name, job_name, parameter):
     return databricks.SubmitRunOp(
         name="submitrun",
         run_name=run_name,
@@ -43,10 +43,10 @@ def delete_job(job_name):
 )
 def calc_pipeline(job_name="test-job", run_name="test-job-run", parameter="10"):
     create_job_task = create_job(job_name)
-    create_run_task = create_run(run_name, job_name, parameter)
-    create_run_task.after(create_job_task)
+    submit_run_task = submit_run(run_name, job_name, parameter)
+    submit_run_task.after(create_job_task)
     delete_run_task = delete_run(run_name)
-    delete_run_task.after(create_run_task)
+    delete_run_task.after(submit_run_task)
     delete_job_task = delete_job(job_name)
     delete_job_task.after(delete_run_task)
 
