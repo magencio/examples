@@ -1,9 +1,5 @@
 import kfp.dsl as dsl
 import kfp.compiler as compiler
-# Git clone custom Kubernetes Pipelines SDK https://github.com/magencio/pipelines.git,
-# databricks-wrapper branch to e.g. /mnt/c/_git/magencio-kubeflow-pipelines.
-# Then add the SDK to PYTHONPATH:
-# export PYTHONPATH=/mnt/c/_git/magencio-kubeflow-pipelines/sdk/python:$PYTHONPATH
 import kfp.dsl.databricks as databricks
 
 def create_cluster(cluster_name):
@@ -18,11 +14,7 @@ def create_cluster(cluster_name):
         num_workers=2
     )
 
-def submit_run(cluster_id, run_name, parameter):
-    # Sample based on https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job
-    # Additional info:
-    #   - Databricks File System: https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system
-    #   - DBFS CLI: https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli
+def submit_run(run_name, cluster_id, parameter):
     return databricks.SubmitRunOp(
         name="submitrun",
         run_name=run_name,
@@ -52,7 +44,7 @@ def delete_cluster(cluster_name):
 )
 def calc_pipeline(cluster_name="test-cluster", run_name="test-run", parameter="10"):
     create_cluster_task = create_cluster(cluster_name)
-    submit_run_task = submit_run(create_cluster_task.outputs["cluster_id"], run_name, parameter)
+    submit_run_task = submit_run(run_name, create_cluster_task.outputs["cluster_id"], parameter)
     delete_run_task = delete_run(run_name)
     delete_run_task.after(submit_run_task)
     delete_cluster_task = delete_cluster(cluster_name)

@@ -1,22 +1,9 @@
 import kfp.dsl as dsl
 import kfp.compiler as compiler
-# Git clone custom Kubernetes Pipelines SDK https://github.com/magencio/pipelines.git,
-# databricks-wrapper branch to e.g. /mnt/c/_git/magencio-kubeflow-pipelines.
-# Then add the SDK to PYTHONPATH:
-# export PYTHONPATH=/mnt/c/_git/magencio-kubeflow-pipelines/sdk/python:$PYTHONPATH
 import kfp.dsl.databricks as databricks
 
-@dsl.pipeline(
-    name="DatabricksRun",
-    description="A toy pipeline that computes an approximation to pi with Azure Databricks."
-)
-def calc_pipeline(run_name="test-run", parameter="10"):
-
-    # Sample based on https://docs.databricks.com/dev-tools/api/latest/examples.html#create-and-run-a-jar-job
-    # Additional info:
-    #   - Databricks File System: https://docs.microsoft.com/en-us/azure/databricks/data/databricks-file-system
-    #   - DBFS CLI: https://docs.microsoft.com/en-us/azure/databricks/dev-tools/databricks-cli#dbfs-cli
-    submit_run_task = databricks.SubmitRunOp(
+def submit_run(run_name, parameter):
+    return databricks.SubmitRunOp(
         name="submitrun",
         run_name=run_name,
         new_cluster={
@@ -31,10 +18,19 @@ def calc_pipeline(run_name="test-run", parameter="10"):
         }
     )
 
-    delete_run_task = databricks.DeleteRunOp(
+def delete_run(run_name):
+    return databricks.DeleteRunOp(
         name="deleterun",
         run_name=run_name
     )
+
+@dsl.pipeline(
+    name="DatabricksRun",
+    description="A toy pipeline that computes an approximation to pi with Azure Databricks."
+)
+def calc_pipeline(run_name="test-run", parameter="10"):
+    submit_run_task = submit_run(run_name, parameter)
+    delete_run_task = delete_run(run_name)
     delete_run_task.after(submit_run_task)
 
 if __name__ == "__main__":
